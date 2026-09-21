@@ -11,7 +11,7 @@
         if (error) reject(error); else resolve(image);
       }
       image.onload = () => finish();
-      image.onerror = () => finish(new Error("无法读取图片，请使用浏览器支持的图片格式"));
+      image.onerror = () => finish(new Error("当前浏览器无法读取这张图片，文件可能已损坏或格式不受支持。可尝试转换为 JPG、PNG 或 WebP"));
       image.src = src;
     });
   }
@@ -20,7 +20,8 @@
     const entries = [];
     // Decode sequentially so a large selection does not decode all original photos at once.
     for (const file of files) {
-      if (file.type && !file.type.startsWith("image/")) throw new Error(`「${file.name}」不是图片。`);
+      // File pickers may report an empty or generic MIME type, especially on phones.
+      // Let the browser validate the actual image content instead of rejecting its label.
       const url = URL.createObjectURL(file);
       try {
         const original = await decode(url);

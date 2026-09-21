@@ -2,6 +2,8 @@
 
 ## 图片自定义（2026-09-21）
 
+- 格式兼容：使用真实编码的 JPG / JPEG、PNG、WebP、BMP、GIF、SVG 混合导入过程图片，逐一验证最终图片；大写扩展名、空 MIME 和 `application/octet-stream` 均通过。伪装为 JPG 的损坏文件正确提示错误并保留旧设置。
+
 - `node tests/balance.cjs`：默认阵容、冷却、物理倍率、最终等级与危险线回归通过。
 - `node tests/custom-images.cjs`（需要 Playwright；可用 `CHROME_PATH` 指定本机 Chrome）：8 张拒绝、9 张接受、12 张随机抽 9 张、连续 30 局不重复且阵容变化、单独设置最终图片通过。
 - 浏览器验证损坏过程图片或最终图片保留旧设置、当前局不受选图影响、恢复默认下一局生效、刷新恢复默认、两枚第 9 级真实碰撞产生自定义最终图片并显示成功提示。

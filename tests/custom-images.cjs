@@ -93,6 +93,42 @@ const server = http.createServer((req, res) => {
     await restart();
     assert.ok((await lineup()).slice(0, 9).every(src => !src.startsWith('data:')));
     assert.ok((await lineup())[9].startsWith('data:'));
+    // Real encoded files, including mixed formats and unreliable file-picker MIME labels.
+    const encoded = await page.evaluate(() => {
+      const canvas = document.createElement('canvas'); canvas.width = 20; canvas.height = 30;
+      return ['image/jpeg', 'image/jpeg', 'image/png', 'image/webp', 'image/png', 'image/jpeg'].map((type, i) => {
+        const context = canvas.getContext('2d'); context.fillStyle = `hsl(${i * 50}, 80%, 50%)`;
+        context.fillRect(0, 0, 20, 30);
+        const url = canvas.toDataURL(type);
+        if (!url.startsWith(`data:${type};`)) throw new Error(`Test browser cannot encode ${type}`);
+        return url.split(',')[1];
+      });
+    });
+    const formats = ['jpg', 'jpeg', 'png', 'webp', 'PNG', 'JPEG'];
+    const mixed = encoded.map((data, i) => ({
+      name: `format-${i}.${formats[i]}`, mimeType: i === 4 ? 'application/octet-stream' : i === 5 ? '' : ['image/jpeg', 'image/jpeg', 'image/png', 'image/webp'][i], buffer: Buffer.from(data, 'base64')
+    }));
+    const bmp = Buffer.alloc(58);
+    bmp.write('BM'); bmp.writeUInt32LE(58, 2); bmp.writeUInt32LE(54, 10); bmp.writeUInt32LE(40, 14);
+    bmp.writeInt32LE(1, 18); bmp.writeInt32LE(1, 22); bmp.writeUInt16LE(1, 26); bmp.writeUInt16LE(24, 28); bmp[54] = 255;
+    mixed.push(
+      { name: 'sample.bmp', mimeType: 'image/bmp', buffer: bmp },
+      { name: 'sample.gif', mimeType: 'image/gif', buffer: Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64') },
+      { name: 'sample.svg', mimeType: 'image/svg+xml', buffer: Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="30" height="20"><rect width="30" height="20" fill="purple"/></svg>') }
+    );
+    await choose('#process-images', mixed);
+    assert.match(await page.locator('#image-settings-status').textContent(), /9 张自定义过程图片/);
+    await restart();
+    assert.equal(new Set((await lineup()).slice(0, 9)).size, 9);
+    for (const file of mixed) {
+      await choose('#final-image', [file]);
+      assert.doesNotMatch(await page.locator('#image-settings-status').textContent(), /读取失败/);
+      await restart();
+      assert.equal(await page.locator('#target-name').textContent(), file.name.replace(/\.[^.]+$/, ''));
+      assert.ok((await lineup())[9].startsWith('data:image/png'));
+    }
+    await choose('#final-image', [{ name: 'fake.jpg', mimeType: 'application/octet-stream', buffer: Buffer.from('not an image') }]);
+    assert.match(await page.locator('#image-settings-status').textContent(), /读取失败/);
     for (const width of [320, 390, 768, 1280]) {
       await page.setViewportSize({ width, height: 844 });
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `no overflow at ${width}px`);
@@ -102,7 +138,7 @@ const server = http.createServer((req, res) => {
     await page.getByRole('button', { name: '开始游戏', exact: true }).click();
     assert.ok((await lineup()).every(src => !src.startsWith('data:')));
     assert.deepEqual(errors, []);
-    console.log('PASS: 8/9/12 image selections, independent final image, 30 random rounds, atomic failure, real final merge, next-round settings, restore, refresh, four viewport sizes, no JS errors');
+    console.log('PASS: real JPG/JPEG/PNG/WebP/BMP/GIF/SVG, uppercase and generic/empty MIME types, 8/9/12 image selections, independent final image, 30 random rounds, atomic failure, real final merge, next-round settings, restore, refresh, four viewport sizes, no JS errors');
   } finally {
     if (browser) await browser.close();
     await new Promise(resolve => server.close(resolve));
