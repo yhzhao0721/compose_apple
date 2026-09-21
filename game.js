@@ -5,7 +5,7 @@
   const canvas = $("game-canvas"), ctx = canvas.getContext("2d");
   const overlay = $("overlay"), overlayButton = $("overlay-button");
   const W = 520, H = 700, LEFT = 30, RIGHT = 490, FLOOR = 665, DANGER = 160;
-  const RANDOM_CHARACTER_COUNT = 9, DROP_COOLDOWN_MS = 280, PHYSICS_SPEED = 2;
+  const RANDOM_CHARACTER_COUNT = 9, DROP_COOLDOWN_MS = 50, PHYSICS_SPEED = 8;
   const RADII = [15, 20, 27, 35, 45, 55, 66, 78, 91, 121];
   const POINTS = [1, 3, 6, 10, 15, 21, 28, 36, 45, 70];
   const NAMES = ["阿噗噜派", "大哥", "哐哐哐", "莎草妈妈", "小蛋糕", "一只小兔兔", "csy", "dcy", "mon3tr", "omni", "tt", "wc", "wsy", "zbra", "zdx"];
@@ -108,7 +108,7 @@
     });
   });
   function tick() {
-    // Two stable physics steps per gameplay tick: the same fall takes half the time.
+    // Match the fast-test version: eight stable physics steps per gameplay tick.
     // Cooldown and danger timers still advance once, in unaccelerated gameplay time.
     for (let step = 0; step < PHYSICS_SPEED; step++) Engine.update(engine, STEP);
     cooldown = Math.max(0, cooldown - STEP);
