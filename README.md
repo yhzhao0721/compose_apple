@@ -1,6 +1,10 @@
 # 合成苹果乐
 
-基于 https://github.com/guguguing/compose_qu 的本地独立衍生版本，保留原始 Git 历史。原版目录不受影响；尚未创建远程 GitHub fork 或发布网页。
+基于 https://github.com/guguguing/compose_qu 的独立衍生版本，保留原始 Git 历史。
+
+试玩地址：https://yhzhao0721.github.io/
+
+网站仓库：https://github.com/yhzhao0721/yhzhao0721.github.io （独立仓库，并非 GitHub 平台关联 fork）。
 
 ## 运行
 
