@@ -4,7 +4,7 @@
   const $ = id => document.getElementById(id);
   const canvas = $("game-canvas"), ctx = canvas.getContext("2d");
   const overlay = $("overlay"), overlayButton = $("overlay-button");
-  const W = 520, H = 700, LEFT = 30, RIGHT = 490, FLOOR = 665, DANGER = 160;
+  const W = 520, H = 700, LEFT = 30, RIGHT = 490, FLOOR = 665, DANGER = 128;
   const RANDOM_CHARACTER_COUNT = 9, DROP_COOLDOWN_MS = 50, PHYSICS_SPEED = 8;
   const RADII = [15, 20, 27, 35, 45, 55, 66, 78, 91, 121];
   const POINTS = [1, 3, 6, 10, 15, 21, 28, 36, 45, 70];
