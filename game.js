@@ -51,6 +51,7 @@
     });
   }
   function resetRound() {
+    window.victorySound?.reset();
     Composite.clear(engine.world, false); Engine.clear(engine);
     Composite.add(engine.world, [
       Bodies.rectangle(W / 2, FLOOR + 25, RIGHT - LEFT + 60, 50, { isStatic: true }),
@@ -63,11 +64,13 @@
     updatePreview(); updateLineup(); resume();
   }
   function resume() {
+    window.victorySound?.unlock();
     mode = "playing"; overlay.hidden = true; accumulator = 0; lastTime = 0;
     $("pause-button").textContent = "暂停"; canvas.focus({ preventScroll: true });
   }
   function pause() {
     if (mode !== "playing") return;
+    window.victorySound?.pause();
     mode = "paused"; activePointer = null; activeTouch = null; accumulator = 0;
     $("pause-button").textContent = "继续";
     showOverlay("休息一下", "回来时，朋友们还在原地等你。", "继续游戏");
@@ -101,7 +104,7 @@
       Composite.remove(engine.world, a); Composite.remove(engine.world, b); Composite.add(engine.world, upgraded);
       score += POINTS[level]; $("score").textContent = score;
       if (score > best) { best = score; $("best-score").textContent = best; try { localStorage.setItem("composeAppleBest", String(best)); } catch (_) {} }
-      if (level === levels.length - 1 && !won) { won = true; $("status").textContent = "🍎 合成苹果乐啦！可以继续挑战更高分。"; }
+      if (level === levels.length - 1 && !won) { won = true; $("status").textContent = "🍎 合成苹果乐啦！可以继续挑战更高分。"; window.victorySound?.play(); }
     });
   });
   function tick() {

@@ -26,6 +26,7 @@
         <section class="target card"><img src="assets/characters/苹果乐.jpg" alt="最终合成：苹果乐" draggable="false"><div><p class="eyebrow">最终目标 · LEVEL 10</p><h2>苹果乐</h2></div></section>
         <section class="card controls"><label for="display-size">画面大小</label><select id="display-size"><option value="1">自动适配</option><option value="0.85">小一点</option><option value="1.15">大一点</option></select><button id="restart-button" type="button">换一局 · 随机新阵容</button><p>大小只改变显示，不改变碰撞和难度。</p></section>
         <section class="card victory-controls"><label for="background-transparency">成功背景透明度 <output id="background-transparency-value" for="background-transparency">65%</output></label><input id="background-transparency" type="range" min="0" max="100" step="1" value="65" aria-describedby="background-help"><p id="background-help">合成苹果乐后显示。0% 最清晰，100% 完全透明。</p></section>
+        <section class="card victory-controls"><p>成功音乐 · Heavenly Me</p><button id="victory-audio-button" type="button" disabled>成功后播放</button><p id="victory-audio-status" role="status">首次合成苹果乐时播放一次。</p><audio id="victory-audio" preload="auto" src="assets/victory-audio.m4a"></audio></section>
         <details class="card" open><summary>本局合成路线 <span>小 → 大</span></summary><ol id="lineup"></ol></details>
         <details class="card"><summary>怎么玩</summary><p class="rules">相同头像相碰，合成下一级。每局从 15 位朋友中不重复抽取 9 位，随机排列；第 10 级永远是苹果乐。头像在危险线上方停留过久就会结束。切到后台会暂停，回来后点继续。</p></details>
       </aside>
@@ -33,6 +34,7 @@
     <noscript>请启用 JavaScript 后开始游戏。</noscript>
   </main>
   <script src="vendor/matter.min.js"></script>
+  <script src="success-audio.js"></script>
   <script src="game.js"></script>
 </body>
 </html>
