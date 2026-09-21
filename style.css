@@ -37,7 +37,10 @@ aside { display: grid; gap: 12px; }
 .target { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; }
 .target img { width: 108px; height: 108px; object-fit: cover; border-radius: 50%; border: 4px solid #f0d4b4; }
 .target h2 { margin: 6px 0; font-size: 23px; }
-.target p:last-child { font-size: 12px; color: var(--muted); line-height: 1.7; }
+.victory-controls label { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; }
+.victory-controls output { color: var(--accent); font-variant-numeric: tabular-nums; }
+.victory-controls input { display: block; width: 100%; min-height: 44px; margin: 4px 0; accent-color: var(--accent); }
+.victory-controls p { color: var(--muted); font-size: 11px; line-height: 1.6; }
 .controls { display: grid; grid-template-columns: 1fr 1.2fr; gap: 10px; align-items: center; font-size: 13px; }
 .controls button, .controls p { grid-column: 1 / -1; }
 .controls p { color: var(--muted); font-size: 11px; line-height: 1.6; }
@@ -49,7 +52,6 @@ summary span { color: var(--muted); font-size: 10px; margin-left: 7px; }
 #lineup img { display: block; width: 36px; height: 36px; border-radius: 50%; object-fit: cover; margin: 0 auto 4px; }
 #lineup li:last-child img { outline: 2px solid #ca503e; outline-offset: 2px; }
 .rules { font-size: 13px; line-height: 1.9; color: var(--muted); margin-top: 8px; }
-footer { padding: 16px 0 0; text-align: center; color: #a6957e; font-size: 11px; }
 @media (max-width: 700px) { .app { max-width: 530px; } .layout { grid-template-columns: minmax(0, 1fr); gap: 12px; } h1 { font-size: 23px; } .header { margin-bottom: 10px; } .scores>div { min-width: 56px; padding: 6px 9px; } .target { flex-direction: row; text-align: left; } .target img { width: 65px; height: 65px; } .target h2 { font-size: 19px; } #lineup { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
 @media (max-width: 350px) { h1 { font-size: 20px; } h1 span { display: none; } .scores { gap: 4px; } .scores>div { min-width: 48px; padding: 5px; } }
 @media (max-height: 600px) { #overlay { padding: 12px; gap: 7px; justify-content: flex-start; } #overlay h2 { font-size: 20px; } #overlay p { font-size: 12px; } }

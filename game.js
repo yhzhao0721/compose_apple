@@ -12,6 +12,7 @@
   const images = new Map();
   let levels = [], score = 0, best = 0, next = 0, aim = W / 2;
   let mode = "loading", cooldown = 0, dangerTime = 0, won = false;
+  let backgroundTransparency = 65;
   let activePointer = null, activeTouch = null, dpr = 1, lastTime = 0, accumulator = 0;
   let engine, mergeQueue = [], animation, lastTouchTime = 0;
   const STEP = 1000 / 60;
@@ -45,7 +46,7 @@
     $("lineup").textContent = "";
     levels.forEach((name, i) => {
       const li = document.createElement("li"), image = new Image(), label = document.createElement("span");
-      setImage(image, name); label.textContent = `${i + 1}. ${name}`;
+      setImage(image, name); image.alt = `第 ${i + 1} 级`; label.textContent = String(i + 1);
       li.append(image, label); $("lineup").append(li);
     });
   }
@@ -128,7 +129,17 @@
   function draw() {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
     ctx.fillStyle = "#fffdf6"; ctx.fillRect(0, 0, W, H);
-    ctx.fillStyle = "#f8eddb"; ctx.fillRect(0, 0, W, DANGER);
+    const background = images.get("victory-background");
+    if (won && background && background.naturalWidth) {
+      // Center-cover the supplied photo; change only its opacity, not the game pieces.
+      const scale = Math.max(W / background.naturalWidth, H / background.naturalHeight);
+      const width = background.naturalWidth * scale, height = background.naturalHeight * scale;
+      ctx.save(); ctx.globalAlpha = 1 - backgroundTransparency / 100;
+      ctx.drawImage(background, (W - width) / 2, (H - height) / 2, width, height);
+      ctx.restore();
+    } else {
+      ctx.fillStyle = "#f8eddb"; ctx.fillRect(0, 0, W, DANGER);
+    }
     ctx.strokeStyle = dangerTime > 0 ? "#db382a" : "#cc8976"; ctx.lineWidth = dangerTime > 0 ? 3 : 2;
     ctx.setLineDash([7, 7]); ctx.beginPath(); ctx.moveTo(LEFT, DANGER); ctx.lineTo(RIGHT, DANGER); ctx.stroke(); ctx.setLineDash([]);
     ctx.fillStyle = "#b16652"; ctx.font = "13px sans-serif"; ctx.textAlign = "right";
@@ -199,6 +210,11 @@
     canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr); draw();
   }
   $("display-size").onchange = resize;
+  $("background-transparency").oninput = () => {
+    backgroundTransparency = Number($("background-transparency").value);
+    $("background-transparency-value").textContent = `${backgroundTransparency}%`;
+    draw();
+  };
   window.addEventListener("resize", resize);
   window.addEventListener("orientationchange", () => { pause(); resize(); });
   if (window.visualViewport) window.visualViewport.addEventListener("resize", resize);
@@ -209,12 +225,13 @@
   window.addEventListener("pagehide", pause);
   window.addEventListener("pageshow", () => { lastTime = 0; resize(); });
   resize(); animation = requestAnimationFrame(frame);
-  Promise.all(NAMES.concat("苹果乐").map(name => new Promise(resolve => {
+  Promise.all(NAMES.concat("苹果乐", "victory-background").map(name => new Promise(resolve => {
     const image = new Image(); images.set(name, image);
     let settled = false;
     const finish = ok => { if (settled) return; settled = true; clearTimeout(timer); resolve(ok); };
     const timer = setTimeout(() => finish(false), 10000);
-    image.onload = () => finish(true); image.onerror = () => finish(false); image.src = imagePath(name);
+    image.onload = () => finish(true); image.onerror = () => finish(false);
+    image.src = name === "victory-background" ? "assets/victory-background.jpg" : imagePath(name);
   }))).then(results => {
     if (results.some(ok => !ok)) {
       mode = "error"; showOverlay("部分图片没有加载成功", "请检查网络或重新打开页面，加载完整图片后再开始。", "重新加载"); overlayButton.onclick = () => location.reload();
