@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#fff5e6">
-  <meta name="description" content="每局随机十位朋友，一起合成最终的苹果乐！">
+  <meta name="description" content="每局随机九位朋友，一起合成最终的苹果乐！">
   <title>合成苹果乐</title>
   <link rel="icon" href="assets/characters/苹果乐.jpg">
   <link rel="stylesheet" href="style.css">
@@ -17,16 +17,16 @@
         <div class="game-toolbar"><div class="next"><img id="next-image" alt=""><span>待投放<strong id="next-name">准备中</strong></span></div><button id="pause-button" type="button">暂停</button></div>
         <div id="game-wrap">
           <canvas id="game-canvas" width="520" height="700" tabindex="0" aria-label="合成游戏：拖动后松开投放，键盘左右键瞄准，空格投放">请使用支持 Canvas 的浏览器。</canvas>
-          <div id="overlay" role="dialog" aria-modal="true" aria-labelledby="overlay-title"><p>每次相遇，都向快乐靠近</p><h2 id="overlay-title">正在加载图片…</h2><p id="overlay-text">每局十位朋友，终点都是苹果乐。</p><button id="overlay-button" type="button" hidden>开始游戏</button><button id="cancel-restart" type="button" hidden>保留本局</button></div>
+          <div id="overlay" role="dialog" aria-modal="true" aria-labelledby="overlay-title"><p>每次相遇，都向快乐靠近</p><h2 id="overlay-title">正在加载图片…</h2><p id="overlay-text">每局九位朋友，终点都是苹果乐。</p><button id="overlay-button" type="button" hidden>开始游戏</button><button id="cancel-restart" type="button" hidden>保留本局</button></div>
         </div>
         <p class="hint">按住拖动瞄准，松手投放 · 电脑也可用 ← → 和空格</p>
         <p id="status" role="status" aria-live="polite">正在准备本局阵容…</p>
       </section>
       <aside>
-        <section class="target card"><img src="assets/characters/苹果乐.jpg" alt="最终合成：苹果乐" draggable="false"><div><p class="eyebrow">最终目标 · LEVEL 11</p><h2>苹果乐</h2><p>把朋友们，合成一个大大的快乐。</p></div></section>
+        <section class="target card"><img src="assets/characters/苹果乐.jpg" alt="最终合成：苹果乐" draggable="false"><div><p class="eyebrow">最终目标 · LEVEL 10</p><h2>苹果乐</h2><p>把朋友们，合成一个大大的快乐。</p></div></section>
         <section class="card controls"><label for="display-size">画面大小</label><select id="display-size"><option value="1">自动适配</option><option value="0.85">小一点</option><option value="1.15">大一点</option></select><button id="restart-button" type="button">换一局 · 随机新阵容</button><p>大小只改变显示，不改变碰撞和难度。</p></section>
         <details class="card" open><summary>本局合成路线 <span>小 → 大</span></summary><ol id="lineup"></ol></details>
-        <details class="card"><summary>怎么玩</summary><p class="rules">相同头像相碰，合成下一级。每局从 15 位朋友中不重复抽取 10 位，随机排列；第 11 级永远是苹果乐。头像在危险线上方停留过久就会结束。切到后台会暂停，回来后点继续。</p></details>
+        <details class="card"><summary>怎么玩</summary><p class="rules">相同头像相碰，合成下一级。每局从 15 位朋友中不重复抽取 9 位，随机排列；第 10 级永远是苹果乐。头像在危险线上方停留过久就会结束。切到后台会暂停，回来后点继续。</p></details>
       </aside>
     </div>
     <footer>今天，也要合成快乐。</footer>

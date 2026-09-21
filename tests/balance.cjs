@@ -1,0 +1,33 @@
+const fs=require('node:fs'), vm=require('node:vm'), assert=require('node:assert/strict');
+const path=require('node:path');
+const root=path.resolve(__dirname,'..');
+let Matter;
+const source=fs.readFileSync(path.join(root,'game.js'),'utf8');
+const noop=()=>{};
+const ctx=new Proxy({},{get:()=>noop});
+const nodes=new Map();
+function node(id){if(!nodes.has(id))nodes.set(id,{textContent:'',hidden:true,value:'1',style:{setProperty:noop},getContext:()=>ctx,getBoundingClientRect:()=>({top:80,left:0,width:520}),append:noop,addEventListener:noop,focus:noop});return nodes.get(id);}
+const sandbox={Matter,console,Image:class {},localStorage:{getItem:()=>null,setItem:noop},document:{getElementById:node,querySelector:()=>node('canvas'),createElement:()=>node('temp'),documentElement:node('root'),addEventListener:noop},window:{Matter,devicePixelRatio:1,innerHeight:900,scrollY:0,addEventListener:noop},setTimeout:()=>0,clearTimeout:noop,requestAnimationFrame:()=>0,cancelAnimationFrame:noop};
+const expose=`\n globalThis.test={resetRound,tick,drop,fruit,shuffledRound,engine,get cooldown(){return cooldown},get mode(){return mode},get dangerTime(){return dangerTime}};\n})();`;
+vm.createContext(sandbox);
+vm.runInContext(fs.readFileSync(path.join(root,'vendor/matter.min.js'),'utf8'),sandbox);
+Matter=sandbox.Matter;sandbox.window.Matter=Matter;
+vm.runInContext(source.replace(/\}\)\(\);\s*$/,expose),sandbox);
+const t=sandbox.test;
+for(let i=0;i<100;i++){const round=t.shuffledRound();assert.equal(round.length,10);assert.equal(new Set(round).size,10);assert.equal(round[9],'苹果乐');}
+t.resetRound();t.drop();assert.equal(t.cooldown,280);
+for(let i=0;i<16;i++)t.tick();
+const count=()=>Matter.Composite.allBodies(t.engine.world).filter(b=>b.game).length;
+t.drop();assert.equal(count(),1,'drop must still be blocked at 266.7 ms');
+t.tick();t.drop();assert.equal(count(),2,'drop must be allowed at 283.3 ms');
+t.resetRound();const fast=t.fruit(260,65,0);Matter.Composite.add(t.engine.world,fast);
+const baseline=vm.runInContext('Matter.Engine.create({gravity:{y:1.05,scale:.001},enableSleeping:false})',sandbox);
+const slow=t.fruit(260,65,0);Matter.Composite.add(baseline.world,slow);
+for(let i=0;i<12;i++)t.tick();for(let i=0;i<24;i++)Matter.Engine.update(baseline,1000/60);
+assert.ok(Math.abs(fast.position.y-slow.position.y)<1e-9,'same fall trajectory in half the time');
+t.resetRound();for(const x of [230,300])Matter.Composite.add(t.engine.world,t.fruit(x,500,9));t.tick();assert.equal(count(),2,'two final apples must not merge');
+t.resetRound();const high=t.fruit(260,140,0);Matter.Body.setStatic(high,true);Matter.Composite.add(t.engine.world,high);
+for(let i=0;i<160;i++)t.tick();assert.equal(t.dangerTime,0,'2.8s birth grace not halved');
+for(let i=0;i<50;i++)t.tick();assert.equal(t.mode,'playing','danger grace not halved');
+for(let i=0;i<60;i++)t.tick();assert.equal(t.mode,'ended');
+console.log('PASS: 100 random rounds, 280ms cooldown boundary, exact 2x fall trajectory, terminal apples, unchanged birth/danger grace');

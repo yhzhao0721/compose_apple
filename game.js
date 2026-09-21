@@ -5,8 +5,9 @@
   const canvas = $("game-canvas"), ctx = canvas.getContext("2d");
   const overlay = $("overlay"), overlayButton = $("overlay-button");
   const W = 520, H = 700, LEFT = 30, RIGHT = 490, FLOOR = 665, DANGER = 160;
-  const RADII = [15, 20, 27, 35, 45, 55, 66, 78, 91, 106, 121];
-  const POINTS = [1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 70];
+  const RANDOM_CHARACTER_COUNT = 9, DROP_COOLDOWN_MS = 280, PHYSICS_SPEED = 2;
+  const RADII = [15, 20, 27, 35, 45, 55, 66, 78, 91, 121];
+  const POINTS = [1, 3, 6, 10, 15, 21, 28, 36, 45, 70];
   const NAMES = ["阿噗噜派", "大哥", "哐哐哐", "莎草妈妈", "小蛋糕", "一只小兔兔", "csy", "dcy", "mon3tr", "omni", "tt", "wc", "wsy", "zbra", "zdx"];
   const images = new Map();
   let levels = [], score = 0, best = 0, next = 0, aim = W / 2;
@@ -34,7 +35,7 @@
       const j = Math.floor(Math.random() * (i + 1));
       [pool[i], pool[j]] = [pool[j], pool[i]];
     }
-    return pool.slice(0, 10).concat("苹果乐");
+    return pool.slice(0, RANDOM_CHARACTER_COUNT).concat("苹果乐");
   }
   function randomLevel() { const r = Math.random(); return r < .68 ? 0 : r < .91 ? 1 : 2; }
   function imagePath(name) { return "assets/characters/" + encodeURIComponent(name) + ".jpg"; }
@@ -78,12 +79,12 @@
   }
   function drop() {
     if (mode !== "playing" || cooldown > 0) return;
-    Composite.add(engine.world, fruit(aim, 65, next)); cooldown = 560; next = randomLevel(); updatePreview();
+    Composite.add(engine.world, fruit(aim, 65, next)); cooldown = DROP_COOLDOWN_MS; next = randomLevel(); updatePreview();
   }
   function queueCollisions(event) {
     if (mode !== "playing") return;
     event.pairs.forEach(({ bodyA: a, bodyB: b }) => {
-      if (!a.game || !b.game || a.game.merging || b.game.merging || a.game.level !== b.game.level || a.game.level === 10) return;
+      if (!a.game || !b.game || a.game.merging || b.game.merging || a.game.level !== b.game.level || a.game.level >= levels.length - 1) return;
       a.game.merging = b.game.merging = true; mergeQueue.push([a, b]);
     });
   }
@@ -99,16 +100,19 @@
       Composite.remove(engine.world, a); Composite.remove(engine.world, b); Composite.add(engine.world, upgraded);
       score += POINTS[level]; $("score").textContent = score;
       if (score > best) { best = score; $("best-score").textContent = best; try { localStorage.setItem("composeAppleBest", String(best)); } catch (_) {} }
-      if (level === 10 && !won) { won = true; $("status").textContent = "🍎 合成苹果乐啦！可以继续挑战更高分。"; }
+      if (level === levels.length - 1 && !won) { won = true; $("status").textContent = "🍎 合成苹果乐啦！可以继续挑战更高分。"; }
     });
   });
   function tick() {
-    Engine.update(engine, STEP); cooldown = Math.max(0, cooldown - STEP);
-    const unsafe = Composite.allBodies(engine.world).some(b => b.game && !b.game.merging && engine.timing.timestamp - b.game.born > 2800 && b.position.y - b.circleRadius < DANGER && Math.abs(b.velocity.y) < 1.5);
+    // Two stable physics steps per gameplay tick: the same fall takes half the time.
+    // Cooldown and danger timers still advance once, in unaccelerated gameplay time.
+    for (let step = 0; step < PHYSICS_SPEED; step++) Engine.update(engine, STEP);
+    cooldown = Math.max(0, cooldown - STEP);
+    const unsafe = Composite.allBodies(engine.world).some(b => b.game && !b.game.merging && (engine.timing.timestamp - b.game.born) / PHYSICS_SPEED > 2800 && b.position.y - b.circleRadius < DANGER && Math.abs(b.velocity.y) < 1.5);
     dangerTime = unsafe ? dangerTime + STEP : Math.max(0, dangerTime - STEP * 2);
     if (dangerTime > 1500) {
       mode = "ended"; activePointer = null; activeTouch = null;
-      showOverlay("这一局，收获满满", `本局 ${score} 分 · 最佳 ${best} 分。再抽十位朋友，重新出发吧。`, "再来一局");
+      showOverlay("这一局，收获满满", `本局 ${score} 分 · 最佳 ${best} 分。再抽九位朋友，重新出发吧。`, "再来一局");
     }
   }
   function paintImage(name, x, y, radius, alpha = 1) {
@@ -176,7 +180,7 @@
     if (mode === "loading" || mode === "error") return;
     if (mode === "playing" || mode === "paused") {
       pause(); mode = "confirm";
-      showOverlay("换一组新朋友？", "本局进度会清空，重新随机抽取十位朋友。", "确认换一局");
+      showOverlay("换一组新朋友？", "本局进度会清空，重新随机抽取九位朋友。", "确认换一局");
     } else if (mode !== "confirm") resetRound();
   };
   $("cancel-restart").onclick = resume;
