@@ -56,3 +56,15 @@ summary span { color: var(--muted); font-size: 10px; margin-left: 7px; }
 @media (max-width: 350px) { h1 { font-size: 20px; } h1 span { display: none; } .scores { gap: 4px; } .scores>div { min-width: 48px; padding: 5px; } }
 @media (max-height: 600px) { #overlay { padding: 12px; gap: 7px; justify-content: flex-start; } #overlay h2 { font-size: 20px; } #overlay p { font-size: 12px; } }
 @media (orientation: landscape) and (max-height: 550px) and (min-width: 560px) { .app { max-width: 900px; } .layout { grid-template-columns: minmax(0, 1fr) 240px; gap: 16px; } .target { flex-direction: row; text-align: left; } .target img { width: 58px; height: 58px; } .header { margin-bottom: 6px; } }
+
+.image-settings { min-width: 0; }
+.image-settings p { color: var(--muted); font-size: 12px; line-height: 1.6; margin-top: 8px; overflow-wrap: anywhere; }
+.image-settings fieldset { border: 0; padding: 0; margin: 12px 0 0; min-width: 0; display: grid; gap: 8px; }
+.image-settings label { font-size: 13px; }
+.image-settings input { width: 100%; min-width: 0; min-height: 44px; font: inherit; font-size: 12px; }
+.image-settings input::file-selector-button { min-height: 44px; border: 1px solid #d6c9b8; border-radius: 10px; background: #fffdf7; color: var(--ink); margin-right: 6px; cursor: pointer; }
+#image-settings-status { color: #8f4335; }
+.next { min-width: 0; }
+.next img { flex-shrink: 0; }
+.next strong, .target h2 { overflow-wrap: anywhere; }
+.next span, .target > div { min-width: 0; }

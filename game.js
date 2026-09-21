@@ -10,6 +10,21 @@
   const POINTS = [1, 3, 6, 10, 15, 21, 28, 36, 45, 70];
   const NAMES = ["阿噗噜派", "大哥", "哐哐哐", "莎草妈妈", "小蛋糕", "一只小兔兔", "csy", "dcy", "mon3tr", "omni", "tt", "wc", "wsy", "zbra", "zdx"];
   const images = new Map();
+  let customPool = null, customFinal = null, importingImages = false;
+  const customNames = new Map();
+  function displayName(id) { return customNames.get(id) || id; }
+  function targetName() { return displayName(levels[9] || "苹果乐"); }
+  function imageSettingsSummary() {
+    return `下局：${customPool ? customPool.length + " 张自定义过程图片" : "15 张默认过程图片"}中随机抽 9 张；最终图片：${customFinal ? customFinal.name : "苹果乐"}。`;
+  }
+  function prepareCustomImages() {
+    // The current round keeps its images until it is replaced, even after settings change.
+    for (const id of customNames.keys()) images.delete(id);
+    customNames.clear();
+    for (const entry of [...(customPool || []), ...(customFinal ? [customFinal] : [])]) {
+      images.set(entry.id, entry.image); customNames.set(entry.id, entry.name);
+    }
+  }
   let levels = [], score = 0, best = 0, next = 0, aim = W / 2;
   let mode = "loading", cooldown = 0, dangerTime = 0, won = false;
   let backgroundTransparency = 65;
@@ -31,17 +46,17 @@
   const { Engine, Bodies, Body, Composite, Events } = Matter;
   engine = Engine.create({ gravity: { y: 1.05, scale: .001 }, enableSleeping: false });
   function shuffledRound() {
-    const pool = NAMES.slice();
+    const pool = customPool ? customPool.map(entry => entry.id) : NAMES.slice();
     for (let i = pool.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [pool[i], pool[j]] = [pool[j], pool[i]];
     }
-    return pool.slice(0, RANDOM_CHARACTER_COUNT).concat("苹果乐");
+    return pool.slice(0, RANDOM_CHARACTER_COUNT).concat(customFinal ? customFinal.id : "苹果乐");
   }
   function randomLevel() { const r = Math.random(); return r < .68 ? 0 : r < .91 ? 1 : 2; }
   function imagePath(name) { return "assets/characters/" + encodeURIComponent(name) + ".jpg"; }
-  function setImage(element, name) { element.src = imagePath(name); element.alt = name; element.draggable = false; }
-  function updatePreview() { setImage($("next-image"), levels[next]); $("next-name").textContent = levels[next]; }
+  function setImage(element, name) { element.src = images.get(name)?.src || imagePath(name); element.alt = displayName(name); element.draggable = false; }
+  function updatePreview() { setImage($("next-image"), levels[next]); $("next-name").textContent = displayName(levels[next]); }
   function updateLineup() {
     $("lineup").textContent = "";
     levels.forEach((name, i) => {
@@ -51,6 +66,8 @@
     });
   }
   function resetRound() {
+    if (importingImages) return;
+    prepareCustomImages();
     window.victorySound?.reset();
     Composite.clear(engine.world, false); Engine.clear(engine);
     Composite.add(engine.world, [
@@ -60,7 +77,8 @@
     ]);
     levels = shuffledRound(); score = 0; cooldown = 0; dangerTime = 0; won = false;
     mergeQueue = []; activePointer = null; activeTouch = null; aim = W / 2; next = randomLevel();
-    $("score").textContent = "0"; $("status").textContent = "本局阵容已就位，向苹果乐出发！";
+    $("score").textContent = "0"; $("status").textContent = `本局阵容已就位，向${targetName()}出发！`;
+    setImage($("target-image"), levels[9]); $("target-name").textContent = targetName();
     updatePreview(); updateLineup(); resume();
   }
   function resume() {
@@ -104,7 +122,7 @@
       Composite.remove(engine.world, a); Composite.remove(engine.world, b); Composite.add(engine.world, upgraded);
       score += POINTS[level]; $("score").textContent = score;
       if (score > best) { best = score; $("best-score").textContent = best; try { localStorage.setItem("composeAppleBest", String(best)); } catch (_) {} }
-      if (level === levels.length - 1 && !won) { won = true; $("status").textContent = "🍎 合成苹果乐啦！可以继续挑战更高分。"; window.victorySound?.play(); }
+      if (level === levels.length - 1 && !won) { won = true; $("status").textContent = `🍎 合成${targetName()}啦！可以继续挑战更高分。`; window.victorySound?.play(); }
     });
   });
   function tick() {
@@ -199,6 +217,31 @@
   };
   $("cancel-restart").onclick = resume;
   overlayButton.onclick = () => { if (mode === "paused") resume(); else resetRound(); };
+  async function selectImages(input, isFinal) {
+    const files = Array.from(input.files || []);
+    input.value = "";
+    if (!files.length || importingImages) return;
+    pause(); importingImages = true;
+    $("image-inputs").disabled = true;
+    overlayButton.disabled = true;
+    $("image-settings-status").textContent = `正在处理 ${files.length} 张图片…`;
+    try {
+      const entries = await window.customImages.load(files, isFinal ? 1 : RANDOM_CHARACTER_COUNT);
+      if (isFinal) customFinal = entries[0]; else customPool = entries;
+      $("image-settings-status").textContent = imageSettingsSummary() + " 点击开始游戏或换一局使用。";
+    } catch (error) {
+      $("image-settings-status").textContent = error.message + " 已保留之前的设置。";
+    } finally {
+      importingImages = false; $("image-inputs").disabled = false; overlayButton.disabled = false;
+    }
+  }
+  $("process-images").onchange = () => selectImages($("process-images"), false);
+  $("final-image").onchange = () => selectImages($("final-image"), true);
+  $("restore-images").onclick = () => {
+    if (importingImages) return;
+    customPool = null; customFinal = null;
+    $("image-settings-status").textContent = "已恢复默认，下一局生效。" + imageSettingsSummary();
+  };
   // Keep the physics world fixed. Only CSS display size and backing-store density change.
   function resize() {
     activePointer = null; activeTouch = null;
@@ -239,6 +282,7 @@
     if (results.some(ok => !ok)) {
       mode = "error"; showOverlay("部分图片没有加载成功", "请检查网络或重新打开页面，加载完整图片后再开始。", "重新加载"); overlayButton.onclick = () => location.reload();
     } else {
+      $("image-inputs").disabled = false;
       mode = "ready"; $("status").textContent = "15 位朋友随机登场，苹果乐始终压轴。";
       showOverlay("一起合成苹果乐", "按住画面左右拖动，松手投放。相同头像碰在一起，就能长大一级。", "开始游戏");
     }
